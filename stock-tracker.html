@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock & Finance Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #9CAF88; /* Sage green background */
+        }
+        .dashboard-card {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background-color: #F8F9FA; /* Light card background */
+        }
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .positive {
+            color: #10B981;
+        }
+        .negative {
+            color: #EF4444;
+        }
+        .btn-primary {
+            background-color: #3B82F6;
+            color: white;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #2563EB;
+        }
+        .btn-danger {
+            background-color: #EF4444;
+            color: white;
+            transition: all 0.2s;
+        }
+        .btn-danger:hover {
+            background-color: #DC2626;
+        }
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        th {
+            position: sticky;
+            top: 0;
+            background-color: white;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 0.5rem;
+            margin: 1rem auto;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Business Dashboard</h1>
+                <h2 class="text-xl font-semibold text-blue-600">Stock & Financial Tracker</h2>
+                <div id="current-date" class="text-gray-500 mt-1"></div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-chart-line text-blue-500 text-2xl"></i>
+                <i class="fas fa-boxes text-indigo-500 text-2xl"></i>
+                <i class="fas fa-money-bill-wave text-green-500 text-2xl"></i>
+            </div>
+        </header>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="dashboard-card rounded-lg p-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-gray-500 font-medium">Total Inventory Value</h3>
+                        <p id="total-capital" class="text-3xl font-bold text-gray-800 mt-2">₱0.00</p>
+                    </div>
+                    <i class="fas fa-boxes text-indigo-500 text-2xl"></i>
+                </div>
+                <p class="text-sm text-gray-500 mt-4">Calculated from your inventory</p>
+            </div>
+            <div class="dashboard-card rounded-lg p-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-gray-500 font-medium">Net Profit</h3>
+                        <p id="net-profit" class="text-3xl font-bold text-gray-800 mt-2">₱0.00</p>
+                    </div>
+                    <i class="fas fa-chart-pie text-blue-500 text-2xl"></i>
+                </div>
+                <p id="profit-status" class="text-sm font-medium mt-4">-</p>
+            </div>
+            <div class="dashboard-card rounded-lg p-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-gray-500 font-medium">Balance</h3>
+                        <p id="balance" class="text-3xl font-bold text-gray-800 mt-2">₱0.00</p>
+                    </div>
+                    <i class="fas fa-wallet text-green-500 text-2xl"></i>
+                </div>
+                <p id="balance-status" class="text-sm font-medium mt-4">Income - Expenses</p>
+            </div>
+        </div>
+
+        <!-- Inventory Section -->
+        <div class="bg-white rounded-lg shadow-sm mb-8">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-box-open text-indigo-500 mr-2"></i>
+                    Inventory Management
+                </h2>
+                <p class="text-gray-600 mt-1">Track your stock items with quantity and price</p>
+            </div>
+            <div class="p-6 overflow-x-auto">
+                <div class="mb-4 flex justify-between items-center">
+                    <button onclick="addInventoryRow()" class="btn-primary px-4 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-plus mr-1"></i> Add Item
+                    </button>
+                    <button onclick="saveInventory()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-save mr-1"></i> Save Inventory
+                    </button>
+                </div>
+                <table id="inventory-table" class="w-full text-sm text-left text-gray-500 border rounded-lg overflow-hidden">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Item Name</th>
+                            <th scope="col" class="px-6 py-3">Quantity</th>
+                            <th scope="col" class="px-6 py-3">Unit Price (₱)</th>
+                            <th scope="col" class="px-6 py-3">Total Value (₱)</th>
+                            <th scope="col" class="px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventory-items" class="border-t border-gray-200 divide-y divide-gray-200">
+                        <!-- Rows will be added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Financial Section -->
+        <div class="bg-white rounded-lg shadow-sm mb-8">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800 flex items-center">
+                    <i class="fas fa-money-bill-wave text-green-500 mr-2"></i>
+                    Financial Transactions
+                </h2>
+                <p class="text-gray-600 mt-1">Record your income and expenses with dates</p>
+            </div>
+            <div class="p-6 overflow-x-auto">
+                <div class="mb-4 flex justify-between items-center">
+                    <div class="flex space-x-2">
+                        <button onclick="addTransaction('income')" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                            <i class="fas fa-plus-circle mr-1"></i> Add Income
+                        </button>
+                        <button onclick="addTransaction('expense')" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                            <i class="fas fa-minus-circle mr-1"></i> Add Expense
+                        </button>
+                    </div>
+                    <button onclick="saveTransactions()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-save mr-1"></i> Save Transactions
+                    </button>
+                </div>
+                <table id="finance-table" class="w-full text-sm text-left text-gray-500 border rounded-lg overflow-hidden">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Date</th>
+                            <th scope="col" class="px-6 py-3">Type</th>
+                            <th scope="col" class="px-6 py-3">Description</th>
+                            <th scope="col" class="px-6 py-3">Amount (₱)</th>
+                            <th scope="col" class="px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="finance-items" class="border-t border-gray-200 divide-y divide-gray-200">
+                        <!-- Rows will be added here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Inventory Value Distribution</h2>
+                <canvas id="inventoryChart" class="w-full h-64"></canvas>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Financial Overview</h2>
+                <canvas id="financeChart" class="w-full h-64"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Initialize data storage
+        let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let inventoryChart = null;
+        let financeChart = null;
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Display current date
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', options);
+            
+            // Load saved data
+            loadInventory();
+            loadTransactions();
+            
+            // Calculate and update totals
+            updateInventoryTotal();
+            updateFinancialTotals();
+            
+            // Initialize charts
+            initializeCharts();
+        });
+
+        // Inventory Functions
+        function addInventoryRow(item = '', quantity = 1, price = 0) {
+            const tbody = document.getElementById('inventory-items');
+            const rowId = Date.now(); // Unique ID for each row
+            
+            const row = document.createElement('tr');
+            row.id = `inventory-row-${rowId}`;
+            row.className = 'hover:bg-gray-50';
+            row.innerHTML = `
+                <td class="px-6 py-4">
+                    <input type="text" id="item-${rowId}" value="${item}" class="w-full p-1 border rounded focus:ring-2 focus:ring-blue-100" placeholder="Item name">
+                </td>
+                <td class="px-6 py-4">
+                    <input type="number" id="quantity-${rowId}" value="${quantity}" min="1" class="w-20 p-1 border rounded focus:ring-2 focus:ring-blue-100" onchange="calculateRowTotal(${rowId})">
+                </td>
+                <td class="px-6 py-4">
+                    <input type="number" id="price-${rowId}" value="${price.toFixed(2)}" min="0" step="0.01" class="w-24 p-1 border rounded focus:ring-2 focus:ring-blue-100" onchange="calculateRowTotal(${rowId})">
+                </td>
+                <td class="px-6 py-4 font-medium">
+                    <span id="total-${rowId}">${(quantity * price).toFixed(2)}</span>
+                </td>
+                <td class="px-6 py-4">
+                    <button onclick="removeInventoryRow(${rowId})" class="btn-danger px-3 py-1 rounded text-xs">
+                        <i class="fas fa-trash-alt mr-1"></i> Remove
+                    </button>
+                </td>
+            `;
+            
+            tbody.appendChild(row);
+            return rowId;
+        }
+
+        function removeInventoryRow(rowId) {
+            const row = document.getElementById(`inventory-row-${rowId}`);
+            if (row) {
+                row.remove();
+                updateInventoryTotal();
+            }
+        }
+
+        function calculateRowTotal(rowId) {
+            const quantity = parseFloat(document.getElementById(`quantity-${rowId}`).value) || 0;
+            const price = parseFloat(document.getElementById(`price-${rowId}`).value) || 0;
+            const total = (quantity * price).toFixed(2);
+            document.getElementById(`total-${rowId}`).textContent = total;
+            updateInventoryTotal();
+        }
+
+        function updateInventoryTotal() {
+            let total = 0;
+            const rows = document.getElementById('inventory-items').querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                if (row.id) {
+                    const rowId = row.id.split('-')[2];
+                    const rowTotal = parseFloat(document.getElementById(`total-${rowId}`).textContent) || 0;
+                    total += rowTotal;
+                }
+            });
+            
+            document.getElementById('total-capital').textContent = `₱${total.toFixed(2)}`;
+            updateCharts();
+        }
+
+        function saveInventory() {
+            inventory = [];
+            const rows = document.getElementById('inventory-items').querySelectorAll('tr');
+            
+            rows.forEach(row => {
+                if (row.id) {
+                    const rowId = row.id.split('-')[2];
+                    inventory.push({
+                        item: document.getElementById(`item-${rowId}`).value,
+                        quantity: parseFloat(document.getElementById(`quantity-${rowId}`).value) || 0,
+                        price: parseFloat(document.getElementById(`price-${rowId}`).value) || 0
+                    });
+                }
+            });
+            
+            localStorage.setItem('inventory', JSON.stringify(inventory));
+            alert('Inventory saved successfully!');
+        }
+
+        function loadInventory() {
+            const tbody = document.getElementById('inventory-items');
+            tbody.innerHTML = '';
+            
+            if (inventory.length === 0) {
+                // Add an empty row if no inventory exists
+                addInventoryRow();
+            } else {
+                inventory.forEach(item => {
+                    addInventoryRow(item.item, item.quantity, item.price);
+                });
+            }
+        }
+
+        // Financial Transaction Functions
+        function addTransaction(type, description = '', amount = 0, date = new Date().toISOString().split('T')[0]) {
+            const tbody = document.getElementById('finance-items');
+            const rowId = Date.now();
+            
+            const row = document.createElement('tr');
+            row.id = `finance-row-${rowId}`;
+            row.className = 'hover:bg-gray-50';
+            row.innerHTML = `
+                <td class="px-6 py-4">
+                    <input type="date" id="date-${rowId}" value="${date}" class="p-1 border rounded focus:ring-2 focus:ring-blue-100">
+                </td>
+                <td class="px-6 py-4">
+                    <select id="type-${rowId}" class="p-1 border rounded focus:ring-2 focus:ring-blue-100 ${type === 'income' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}">
+                        <option value="income" ${type === 'income' ? 'selected' : ''}>Income</option>
+                        <option value="expense" ${type === 'expense' ? 'selected' : ''}>Expense</option>
+                    </select>
+                </td>
+                <td class="px-6 py-4">
+                    <input type="text" id="desc-${rowId}" value="${description}" class="w-full p-1 border rounded focus:ring-2 focus:ring-blue-100" placeholder="Description">
+                </td>
+                <td class="px-6 py-4">
+                    <input type="number" id="amount-${rowId}" value="${amount.toFixed(2)}" min="0" step="0.01" class="w-24 p-1 border rounded focus:ring-2 focus:ring-blue-100" onchange="updateFinancialTotals()">
+                </td>
+                <td class="px-6 py-4">
+                    <button onclick="removeTransactionRow(${rowId})" class="btn-danger px-3 py-1 rounded text-xs">
+                        <i class="fas fa-trash-alt mr-1"></i> Remove
+                    </button>
+                </td>
+            `;
+            
+            // Add event listener to type change
+            document.getElementById(`type-${rowId}`).addEventListener('change', function() {
+                this.classList.remove('bg-green-50', 'bg-red-50', 'text-green-700', 'text-red-700');
+                if (this.value === 'income') {
+                    this.classList.add('bg-green-50', 'text-green-700');
+                } else {
+                    this.classList.add('bg-red-50', 'text-red-700');
+                }
+                updateFinancialTotals();
+            });
+            
+            tbody.appendChild(row
